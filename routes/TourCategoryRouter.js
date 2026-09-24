@@ -287,6 +287,7 @@ TourCategoryRouter.post("/create",UserMiddleWare,Image_upload.fields([
         id,
         name,
         tagline,
+        shortDescription,
         description,
         heroImage,
         destinations,
@@ -297,11 +298,11 @@ TourCategoryRouter.post("/create",UserMiddleWare,Image_upload.fields([
       } = body;
 
 
-      if (!id || !name || !tagline || !description) {
+      if (!id || !name || !tagline || !shortDescription || !description) {
         return res.status(400).json({
           success: false,
           message:
-            "id, name, tagline and description are required",
+            "id, name, tagline, shortDescription and description are required",
         });
       }
 
@@ -402,6 +403,7 @@ TourCategoryRouter.post("/create",UserMiddleWare,Image_upload.fields([
           id: cleanId,
           name: name.trim(),
           tagline: tagline.trim(),
+          shortDescription: shortDescription.trim(),
           description: description.trim(),
           heroImage: heroImageUrl,
           heroImagePublicId,
@@ -456,6 +458,7 @@ TourCategoryRouter.put("/edit/:id",UserMiddleWare,Image_upload.fields([
       const {
         name,
         tagline,
+        shortDescription,
         description,
         heroImage,
         destinations,
@@ -506,6 +509,22 @@ TourCategoryRouter.put("/edit/:id",UserMiddleWare,Image_upload.fields([
         }
 
         existingCategory.tagline =tagline.trim();
+      }
+
+      if (shortDescription !== undefined) {
+        if (
+          typeof shortDescription !== "string" ||
+          !shortDescription.trim()
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Category short description cannot be empty",
+          });
+        }
+
+        existingCategory.shortDescription =
+          shortDescription.trim();
       }
 
       if (description !== undefined) {
@@ -671,7 +690,6 @@ TourCategoryRouter.put("/edit/:id",UserMiddleWare,Image_upload.fields([
   }
 );
 
-
 TourCategoryRouter.patch("/:id/gallery/:imageId",UserMiddleWare,async (req, res) => {
     try {
       if (req.user.role !== "admin") {
@@ -834,6 +852,41 @@ TourCategoryRouter.delete("/delete/:id",UserMiddleWare,async (req, res) => {
     }
   }
 );
+
+TourCategoryRouter.get("/navigation", async (req, res) => {
+  try {
+    const [categories, packages] = await Promise.all([
+      TourCategory.find()
+        .select("id name tagline showInNavbar showInExplore heroImage thumbnailImage")
+        .lean(),
+      TourPackage.find()
+        .select("id slug name title thumbnail thumbnailImage heroImage image duration mostLoved specialPackage categorySlug alsoUnder")
+        .lean(),
+    ]);
+
+    const categoriesWithPackages = categories.map((category) => {
+      const categoryPackages = packages.filter(
+        (pkg) =>
+          pkg.categorySlug === category.id ||
+          pkg.alsoUnder?.includes(category.id)
+      );
+
+      return {
+        ...category,
+        packageCount: categoryPackages.length,
+        packages: categoryPackages,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Tour category navigation data fetched successfully",
+      categories: categoriesWithPackages,
+    });
+  } catch (error) {
+    return handleCategoryError(error, res, "fetch tour category navigation data");
+  }
+});
 
 TourCategoryRouter.get("/",async (req, res) => {
     try {

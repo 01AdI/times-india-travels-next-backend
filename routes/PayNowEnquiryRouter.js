@@ -7,6 +7,7 @@ const PayNowEnquiry = require("../models/PayNowSceham");
 const { getLeadLocation } = require("../utils/leadLocation");
 const { detectRisk } = require("../utils/riskDetection");
 const { codeToName } = require("../utils/countryNames");
+const { findMissingRequiredField } = require("../utils/validation");
 
 const sendAdminPayNowEmail = require("../utils/sendPayNowEmail");
 
@@ -127,108 +128,31 @@ PayNowEnquiryRouter.post("/create", async (req, res) => {
     // Required fields
     // --------------------------------------------------------
 
-    const requiredFields = [
-      {
-        field: "amount",
-        value: amount,
-        label: "Amount",
-      },
-      {
-        field: "description",
-        value: description,
-        label: "Description",
-      },
+    const missingField = findMissingRequiredField([
+      ["Amount", amount],
+      ["Description", description],
+      ["Name", name],
+      ["Address", address],
+      ["City", city],
+      ["State", state],
+      ["Postal code", postalCode],
+      ["Country", country],
+      ["Email", email],
+      ["Telephone", telephone],
+      ["Billing name", billingName],
+      ["Billing address", billingAddress],
+      ["Billing city", billingCity],
+      ["Billing state", billingState],
+      ["Billing postal code", billingPostalCode],
+      ["Billing country", billingCountry],
+      ["Billing telephone", billingTelephone],
+    ]);
 
-      {
-        field: "name",
-        value: name,
-        label: "Name",
-      },
-      {
-        field: "address",
-        value: address,
-        label: "Address",
-      },
-      {
-        field: "city",
-        value: city,
-        label: "City",
-      },
-      {
-        field: "state",
-        value: state,
-        label: "State",
-      },
-      {
-        field: "postalCode",
-        value: postalCode,
-        label: "Postal code",
-      },
-      {
-        field: "country",
-        value: country,
-        label: "Country",
-      },
-      {
-        field: "email",
-        value: email,
-        label: "Email",
-      },
-      {
-        field: "telephone",
-        value: telephone,
-        label: "Telephone",
-      },
-
-      {
-        field: "billingName",
-        value: billingName,
-        label: "Billing name",
-      },
-      {
-        field: "billingAddress",
-        value: billingAddress,
-        label: "Billing address",
-      },
-      {
-        field: "billingCity",
-        value: billingCity,
-        label: "Billing city",
-      },
-      {
-        field: "billingState",
-        value: billingState,
-        label: "Billing state",
-      },
-      {
-        field: "billingPostalCode",
-        value: billingPostalCode,
-        label: "Billing postal code",
-      },
-      {
-        field: "billingCountry",
-        value: billingCountry,
-        label: "Billing country",
-      },
-      {
-        field: "billingTelephone",
-        value: billingTelephone,
-        label: "Billing telephone",
-      },
-    ];
-
-
-    for (const item of requiredFields) {
-      if (
-        item.value === undefined ||
-        item.value === null ||
-        String(item.value).trim() === ""
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: `${item.label} is required`,
-        });
-      }
+    if (missingField) {
+      return res.status(400).json({
+        success: false,
+        message: `${missingField} is required`,
+      });
     }
 
 

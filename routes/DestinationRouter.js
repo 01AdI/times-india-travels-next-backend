@@ -160,6 +160,22 @@ DestinationRouter.delete("/delete/:id", UserMiddleWare, async (req, res) => {
   }
 });
 
+DestinationRouter.get("/summary", async (req, res) => {
+  try {
+    const destinations = await Destination.find()
+      .select("id name tagline description heroImage")
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      message: "Destination summaries fetched successfully",
+      destinations,
+    });
+  } catch (error) {
+    return handleDestinationError(error, res, "fetch destination summaries");
+  }
+});
+
 DestinationRouter.get("/", async (req, res) => {
   try {
     const destinations = await Destination.find().lean();

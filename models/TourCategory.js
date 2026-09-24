@@ -22,6 +22,14 @@ const tourCategorySchema = new mongoose.Schema(
       trim: true,
     },
 
+    shortDescription: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 1200,
+    },
+
+
     description: {
       type: String,
       required: true,

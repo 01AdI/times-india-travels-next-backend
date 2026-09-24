@@ -1,5 +1,17 @@
 const validator=require("validator");
 
+/**
+ * Returns the label of the first missing/blank field, or null if all are present.
+ * @param {Array<[label: string, value: any]>} fields
+ */
+function findMissingRequiredField(fields) {
+  for (const [label, value] of fields) {
+    if (value === undefined || value === null || String(value).trim() === "") {
+      return label;
+    }
+  }
+  return null;
+}
 
 function validation (data){
     const manditory=["name","email","password"];
@@ -21,3 +33,4 @@ function validation (data){
 }
 
 module.exports=validation;
+module.exports.findMissingRequiredField = findMissingRequiredField;

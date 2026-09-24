@@ -304,38 +304,94 @@ TourPackageRouter.delete("/delete/:id", UserMiddleWare, async (req, res) => {
 
 TourPackageRouter.get("/", async (req, res) => {
   try {
-    const page = Math.max(Number.parseInt(req.query.page, 10) || 1, 1);
-    const limit = Math.min(Math.max(Number.parseInt(req.query.limit, 10) || 20, 1),100);
+    const page = Math.max(
+      Number.parseInt(req.query.page, 10) || 1,
+      1
+    );
+
+    const limit = Math.min(
+      Math.max(
+        Number.parseInt(req.query.limit, 10) || 20,
+        1
+      ),
+      100
+    );
 
     const skip = (page - 1) * limit;
 
     const filter = {};
 
     if (req.query.mostLoved !== undefined) {
-      filter.mostLoved =req.query.mostLoved === "true";
+      filter.mostLoved = req.query.mostLoved === "true";
     }
 
     if (req.query.specialPackage !== undefined) {
-      filter.specialPackage =req.query.specialPackage === "true";
+      filter.specialPackage =
+        req.query.specialPackage === "true";
     }
 
     if (req.query.categorySlug) {
-      const categorySlug = req.query.categorySlug.trim().toLowerCase();
+      const categorySlug = req.query.categorySlug
+        .trim()
+        .toLowerCase();
+
       filter.$or = [
-          { categorySlug },
-          { alsoUnder: categorySlug },
+        { categorySlug },
+        { alsoUnder: categorySlug },
       ];
     }
 
-    const totalPackages = await TourPackage.countDocuments(filter);
+    if (req.query.search?.trim()) {
+      const search = req.query.search.trim();
 
-    const tourPackages = await TourPackage.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+      const escapedSearch = search.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+      );
 
-    const totalPages = Math.ceil(totalPackages / limit);
+      const searchRegex = new RegExp(
+        escapedSearch,
+        "i"
+      );
+
+      const searchConditions = [
+        { name: { $regex: searchRegex } },
+        { id: { $regex: searchRegex } },
+        { categorySlug: { $regex: searchRegex } },
+        { alsoUnder: { $elemMatch: { $regex: searchRegex } } },
+        { route: { $elemMatch: { $regex: searchRegex } } },
+      ];
+
+      if (filter.$or) {
+        filter.$and = [
+          {
+            $or: filter.$or,
+          },
+          {
+            $or: searchConditions,
+          },
+        ];
+
+        delete filter.$or;
+      } else {
+        filter.$or = searchConditions;
+      }
+    }
+
+    const [totalPackages, tourPackages] =
+      await Promise.all([
+        TourPackage.countDocuments(filter),
+
+        TourPackage.find(filter)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+      ]);
+
+    const totalPages = Math.ceil(
+      totalPackages / limit
+    );
 
     return res.status(200).json({
       success: true,
@@ -351,7 +407,11 @@ TourPackageRouter.get("/", async (req, res) => {
       },
     });
   } catch (error) {
-    return handlePackageError(error, res, "fetch");
+    return handlePackageError(
+      error,
+      res,
+      "fetch"
+    );
   }
 });
 

@@ -11,10 +11,6 @@ const HomeHeroRoute = express.Router();
 
 HomeHeroRoute.post("/admin/create",UserMiddleWare,Hero_media_upload.single("media"),async (req, res) => {
     try {
-      // ========================================================
-      // ADMIN CHECK
-      // ========================================================
-
       if (req.user.role !== "admin") {
         return res.status(403).json({
           success: false,
@@ -30,10 +26,6 @@ HomeHeroRoute.post("/admin/create",UserMiddleWare,Hero_media_upload.single("medi
         active,
         order,
       } = req.body;
-
-      // ========================================================
-      // VALIDATION
-      // ========================================================
 
       if (!place || !place.trim()) {
         return res.status(400).json({
@@ -66,16 +58,8 @@ HomeHeroRoute.post("/admin/create",UserMiddleWare,Hero_media_upload.single("medi
         });
       }
 
-      // ========================================================
-      // MEDIA
-      // ========================================================
-
       let finalMediaUrl = null;
       let mediaId=null;
-
-      // ========================================================
-      // UPLOADED IMAGE / VIDEO
-      // ========================================================
 
       if (req.file) {
         const uploadedMedia = await uploadHeroMedia(
@@ -88,20 +72,12 @@ HomeHeroRoute.post("/admin/create",UserMiddleWare,Hero_media_upload.single("medi
         mediaId=uploadedMedia.public_id;
       }
 
-      // ========================================================
-      // MEDIA URL
-      // ========================================================
-
       else if (
         typeof mediaUrl === "string" &&
         mediaUrl.trim()
       ) {
         finalMediaUrl = mediaUrl.trim();
       }
-
-      // ========================================================
-      // NO MEDIA
-      // ========================================================
 
       else {
         return res.status(400).json({
@@ -111,19 +87,11 @@ HomeHeroRoute.post("/admin/create",UserMiddleWare,Hero_media_upload.single("medi
         });
       }
 
-      // ========================================================
-      // ACTIVE
-      // ========================================================
-
       const isActive =
         active === undefined
           ? true
           : active === true ||
             active === "true";
-
-      // ========================================================
-      // ORDER
-      // ========================================================
 
       const slideOrder =
         order !== undefined &&
@@ -143,10 +111,6 @@ HomeHeroRoute.post("/admin/create",UserMiddleWare,Hero_media_upload.single("medi
         });
       }
 
-      // ========================================================
-      // CREATE HERO SLIDE
-      // ========================================================
-
       const heroSlide = await HomeHero.create({
         place: place.trim(),
         line: line.trim(),
@@ -156,10 +120,6 @@ HomeHeroRoute.post("/admin/create",UserMiddleWare,Hero_media_upload.single("medi
         active: isActive,
         order: slideOrder,
       });
-
-      // ========================================================
-      // SUCCESS RESPONSE
-      // ========================================================
 
       return res.status(201).json({
         success: true,
@@ -187,9 +147,6 @@ HomeHeroRoute.post("/admin/create",UserMiddleWare,Hero_media_upload.single("medi
 
 HomeHeroRoute.get("/", async (req, res) => {
   try {
-    // ========================================================
-    // GET ACTIVE SLIDES
-    // ========================================================
 
     const heroSlides = await HomeHero.find({
       active: true,
@@ -201,10 +158,6 @@ HomeHeroRoute.get("/", async (req, res) => {
         order: 1,
       })
       .lean();
-
-    // ========================================================
-    // SUCCESS RESPONSE
-    // ========================================================
 
     return res.status(200).json({
       success: true,
@@ -230,10 +183,6 @@ HomeHeroRoute.get("/", async (req, res) => {
 
 HomeHeroRoute.get("/admin",UserMiddleWare,async (req, res) => {
     try {
-      // ========================================================
-      // ADMIN CHECK
-      // ========================================================
-
       if (req.user.role !== "admin") {
         return res.status(403).json({
           success: false,
@@ -241,22 +190,12 @@ HomeHeroRoute.get("/admin",UserMiddleWare,async (req, res) => {
             "Only admins can access hero slides.",
         });
       }
-
-      // ========================================================
-      // GET ALL HERO SLIDES
-      // ========================================================
-
       const heroSlides = await HomeHero.find({})
         .sort({
           order: 1,
           createdAt: -1,
         })
         .lean();
-
-      // ========================================================
-      // SUCCESS RESPONSE
-      // ========================================================
-
       return res.status(200).json({
         success: true,
 
@@ -433,21 +372,11 @@ HomeHeroRoute.patch("/admin/:id",UserMiddleWare,Hero_media_upload.single("media"
 
         heroSlide.mediaUrl = mediaUrl.trim();
       }
-
-      // ========================================================
-      // UPDATE ACTIVE
-      // ========================================================
-
       if (active !== undefined) {
         heroSlide.active =
           active === true ||
           active === "true";
       }
-
-      // ========================================================
-      // UPDATE ORDER
-      // ========================================================
-
       if (
         order !== undefined &&
         order !== null &&
@@ -469,15 +398,7 @@ HomeHeroRoute.patch("/admin/:id",UserMiddleWare,Hero_media_upload.single("media"
         heroSlide.order = slideOrder;
       }
 
-      // ========================================================
-      // SAVE HERO SLIDE
-      // ========================================================
-
       await heroSlide.save();
-
-      // ========================================================
-      // SUCCESS RESPONSE
-      // ========================================================
 
       return res.status(200).json({
         success: true,
@@ -505,10 +426,6 @@ HomeHeroRoute.patch("/admin/:id",UserMiddleWare,Hero_media_upload.single("media"
 
 HomeHeroRoute.delete("/admin/:id",UserMiddleWare,async (req, res) => {
     try {
-      // ========================================================
-      // ADMIN CHECK
-      // ========================================================
-
       if (req.user.role !== "admin") {
         return res.status(403).json({
           success: false,
@@ -519,20 +436,12 @@ HomeHeroRoute.delete("/admin/:id",UserMiddleWare,async (req, res) => {
 
       const { id } = req.params;
 
-      // ========================================================
-      // VALIDATE ID
-      // ========================================================
-
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
           success: false,
           message: "Invalid hero slide ID.",
         });
       }
-
-      // ========================================================
-      // FIND HERO SLIDE
-      // ========================================================
 
       const heroSlide = await HomeHero.findById(id);
 
@@ -543,17 +452,9 @@ HomeHeroRoute.delete("/admin/:id",UserMiddleWare,async (req, res) => {
         });
       }
 
-      // ========================================================
-      // DELETE HERO SLIDE
-      // ========================================================
-
       const deletedPackage=await HomeHero.findByIdAndDelete(id);
 
       await deleteCloudinaryAsset(deletedPackage.mediaId, deletedPackage.mediaType);
-
-      // ========================================================
-      // SUCCESS RESPONSE
-      // ========================================================
 
       return res.status(200).json({
         success: true,

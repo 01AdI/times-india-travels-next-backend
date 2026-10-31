@@ -10,20 +10,12 @@ const AuthRouter = express.Router();
 
 AuthRouter.get("/admins", UserMiddleWare, async (req, res) => {
   try {
-    // --------------------------------------------------------
-    // ADMIN CHECK
-    // --------------------------------------------------------
-
     if (req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
         message: "Only admins can view admin accounts.",
       });
     }
-
-    // --------------------------------------------------------
-    // FETCH ADMINS
-    // --------------------------------------------------------
 
     const admins = await User.find({
       role: "admin",
@@ -107,9 +99,6 @@ AuthRouter.post("/login", async (req, res) => {
 
     const admin = await User.findOne({ email });
 
-    // Same generic response whether the email doesn't exist, the
-    // password is wrong, OR the account isn't an admin — none of
-    // these should be distinguishable from outside.
     if (!admin || admin.role !== "admin") {
       return res.status(401).json({ message: "Invalid email or password" });
     }
@@ -179,10 +168,6 @@ AuthRouter.get("/me", UserMiddleWare, async (req, res) => {
 
 AuthRouter.patch("/admins/:id",UserMiddleWare,async (req, res) => {
     try {
-      // ------------------------------------------------------
-      // ADMIN CHECK
-      // ------------------------------------------------------
-
       if (req.user.role !== "admin") {
         return res.status(403).json({
           success: false,
@@ -192,20 +177,12 @@ AuthRouter.patch("/admins/:id",UserMiddleWare,async (req, res) => {
 
       const { id } = req.params;
 
-      // ------------------------------------------------------
-      // VALIDATE ID
-      // ------------------------------------------------------
-
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
           success: false,
           message: "Invalid admin ID.",
         });
       }
-
-      // ------------------------------------------------------
-      // FIND ADMIN
-      // ------------------------------------------------------
 
       const admin = await User.findOne({
         _id: id,
@@ -219,19 +196,11 @@ AuthRouter.patch("/admins/:id",UserMiddleWare,async (req, res) => {
         });
       }
 
-      // ------------------------------------------------------
-      // REQUEST DATA
-      // ------------------------------------------------------
-
       const {
         name,
         email,
         password,
       } = req.body;
-
-      // ------------------------------------------------------
-      // NAME
-      // ------------------------------------------------------
 
       if (name !== undefined) {
         if (
@@ -246,10 +215,6 @@ AuthRouter.patch("/admins/:id",UserMiddleWare,async (req, res) => {
 
         admin.name = name.trim();
       }
-
-      // ------------------------------------------------------
-      // EMAIL
-      // ------------------------------------------------------
 
       if (email !== undefined) {
         if (
@@ -284,10 +249,6 @@ AuthRouter.patch("/admins/:id",UserMiddleWare,async (req, res) => {
         admin.email = normalizedEmail;
       }
 
-      // ------------------------------------------------------
-      // PASSWORD
-      // ------------------------------------------------------
-
       if (password !== undefined) {
         if (
           typeof password !== "string" ||
@@ -310,16 +271,8 @@ AuthRouter.patch("/admins/:id",UserMiddleWare,async (req, res) => {
         admin.password =
           await bcrypt.hash(password, 10);
 
-        // ----------------------------------------------------
-        // INVALIDATE EXISTING TOKENS
-        // ----------------------------------------------------
-
         admin.tokenVersion += 1;
       }
-
-      // ------------------------------------------------------
-      // SAVE
-      // ------------------------------------------------------
 
       await admin.save();
 
@@ -386,10 +339,6 @@ AuthRouter.post("/logout",UserMiddleWare,async (req, res) => {
 
 AuthRouter.delete("/admins/:id",UserMiddleWare,async (req, res) => {
     try {
-      // ------------------------------------------------------
-      // ADMIN CHECK
-      // ------------------------------------------------------
-
       if (req.user.role !== "admin") {
         return res.status(403).json({
           success: false,
@@ -399,20 +348,12 @@ AuthRouter.delete("/admins/:id",UserMiddleWare,async (req, res) => {
 
       const { id } = req.params;
 
-      // ------------------------------------------------------
-      // VALIDATE ID
-      // ------------------------------------------------------
-
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
           success: false,
           message: "Invalid admin ID.",
         });
       }
-
-      // ------------------------------------------------------
-      // PREVENT SELF DELETE
-      // ------------------------------------------------------
 
       if (String(req.user.id) === String(id)) {
         return res.status(400).json({
@@ -421,10 +362,6 @@ AuthRouter.delete("/admins/:id",UserMiddleWare,async (req, res) => {
             "You cannot delete your own admin account.",
         });
       }
-
-      // ------------------------------------------------------
-      // FIND ADMIN
-      // ------------------------------------------------------
 
       const admin = await User.findOne({
         _id: id,
@@ -437,11 +374,7 @@ AuthRouter.delete("/admins/:id",UserMiddleWare,async (req, res) => {
           message: "Admin not found.",
         });
       }
-
-      // ------------------------------------------------------
-      // DELETE
-      // ------------------------------------------------------
-
+      
       await User.findByIdAndDelete(id);
 
       return res.status(200).json({

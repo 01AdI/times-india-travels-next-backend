@@ -2,19 +2,11 @@ const mongoose = require("mongoose");
 
 const ClientReviewVideoSchema = new mongoose.Schema(
   {
-    // ========================================================
-    // CLIENT NAME
-    // ========================================================
-
     name: {
       type: String,
       required: true,
       trim: true,
     },
-
-    // ========================================================
-    // CLIENT LOCATION
-    // ========================================================
 
     location: {
       type: String,
@@ -22,21 +14,11 @@ const ClientReviewVideoSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // ========================================================
-    // TOUR VISITED
-    // Optional because some reviews do not mention a tour.
-    // ========================================================
-
     tour: {
       type: String,
       trim: true,
       default: null,
     },
-
-    // ========================================================
-    // VIDEO
-    // Cloudinary / storage URL
-    // ========================================================
 
     video: {
       type: String,
@@ -47,10 +29,6 @@ const ClientReviewVideoSchema = new mongoose.Schema(
       type: String, 
       default: null 
     },
-
-    // ========================================================
-    // PUBLIC VISIBILITY
-    // ========================================================
 
     active: {
       type: Boolean,

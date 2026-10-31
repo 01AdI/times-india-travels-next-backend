@@ -1,17 +1,6 @@
 const multer = require("multer");
 
-// ============================================================
-// STORE FILE IN MEMORY
-// ============================================================
-
 const storage = multer.memoryStorage();
-
-// ============================================================
-// HERO MEDIA UPLOAD
-// Supports:
-// - Images
-// - Videos
-// ============================================================
 
 const Hero_media_upload = multer({
   storage: storage,

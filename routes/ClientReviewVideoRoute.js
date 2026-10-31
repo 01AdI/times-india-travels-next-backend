@@ -10,19 +10,11 @@ const ClientReviewVideoRoute = express.Router();
 
 ClientReviewVideoRoute.get("/", async (req, res) => {
   try {
-    // ========================================================
-    // FIND ACTIVE VIDEOS
-    // ========================================================
-
     const videos = await ClientReviewVideo.find({
       active: true,
     })
       .sort({ createdAt: -1 })
       .lean();
-
-    // ========================================================
-    // SUCCESS RESPONSE
-    // ========================================================
 
     return res.status(200).json({
       success: true,
@@ -49,9 +41,6 @@ ClientReviewVideoRoute.get("/", async (req, res) => {
 
 ClientReviewVideoRoute.get("/admin",UserMiddleWare,async (req, res) => {
     try {
-      // ======================================================
-      // ADMIN CHECK
-      // ======================================================
 
       if (req.user.role !== "admin") {
         return res.status(403).json({
@@ -60,17 +49,9 @@ ClientReviewVideoRoute.get("/admin",UserMiddleWare,async (req, res) => {
         });
       }
 
-      // ======================================================
-      // FIND ALL VIDEOS
-      // ======================================================
-
       const videos = await ClientReviewVideo.find()
         .sort({ createdAt: -1 })
         .lean();
-
-      // ======================================================
-      // SUCCESS RESPONSE
-      // ======================================================
 
       return res.status(200).json({
         success: true,
@@ -98,10 +79,6 @@ ClientReviewVideoRoute.get("/admin",UserMiddleWare,async (req, res) => {
 
 ClientReviewVideoRoute.get("/admin/:id",UserMiddleWare,async (req, res) => {
     try {
-      // ======================================================
-      // ADMIN CHECK
-      // ======================================================
-
       if (req.user.role !== "admin") {
         return res.status(403).json({
           success: false,
@@ -115,18 +92,10 @@ ClientReviewVideoRoute.get("/admin/:id",UserMiddleWare,async (req, res) => {
           message: "Invalid client review video ID.",
         });
       }
-      // ======================================================
-      // FIND VIDEO
-      // ======================================================
-
       const video =
         await ClientReviewVideo.findById(
           req.params.id
         ).lean();
-
-      // ======================================================
-      // NOT FOUND
-      // ======================================================
 
       if (!video) {
         return res.status(404).json({
@@ -136,11 +105,6 @@ ClientReviewVideoRoute.get("/admin/:id",UserMiddleWare,async (req, res) => {
             "Client review video not found.",
         });
       }
-
-      // ======================================================
-      // SUCCESS RESPONSE
-      // ======================================================
-
       return res.status(200).json({
         success: true,
 

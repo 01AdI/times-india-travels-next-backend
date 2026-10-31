@@ -2,10 +2,6 @@ const mongoose = require("mongoose");
 
 const homeHeroSchema = new mongoose.Schema(
   {
-    // ============================================================
-    // SLIDE TEXT
-    // ============================================================
-
     place: {
       type: String,
       required: true,
@@ -17,10 +13,6 @@ const homeHeroSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
-    // ============================================================
-    // MEDIA
-    // ============================================================
 
     mediaType: {
       type: String,
@@ -38,10 +30,6 @@ const homeHeroSchema = new mongoose.Schema(
       type: String, 
       default: null 
     },
-
-    // ============================================================
-    // DISPLAY
-    // ============================================================
 
     active: {
       type: Boolean,

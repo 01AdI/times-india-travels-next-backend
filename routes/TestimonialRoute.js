@@ -14,11 +14,6 @@ TestimonialRoute.post("/create",Image_upload.single("avatar"),
   async (req, res) => {
     try {
       const { name, location, review, rating } = req.body;
-
-      // ========================================================
-      // VALIDATION
-      // ========================================================
-
       if (!name || !name.trim()) {
         return res.status(400).json({
           success: false,
@@ -40,10 +35,6 @@ TestimonialRoute.post("/create",Image_upload.single("avatar"),
         });
       }
 
-      // ========================================================
-      // RATING VALIDATION
-      // ========================================================
-
       const numericRating = Number(rating);
 
       if (
@@ -56,11 +47,6 @@ TestimonialRoute.post("/create",Image_upload.single("avatar"),
           message: "Rating must be an integer between 1 and 5.",
         });
       }
-
-      // ========================================================
-      // AVATAR
-      // ========================================================
-
       let avatarUrl = null;
       let avatarId=null;
 
@@ -73,11 +59,6 @@ TestimonialRoute.post("/create",Image_upload.single("avatar"),
         avatarUrl = uploadedImage.secure_url;
         avatarId=uploadedImage.public_id;
       }
-
-      // ========================================================
-      // CREATE TESTIMONIAL
-      // ========================================================
-
       const testimonial = await Testimonial.create({
         name: name.trim(),
 
@@ -90,10 +71,6 @@ TestimonialRoute.post("/create",Image_upload.single("avatar"),
 
         rating: numericRating,
 
-        // ======================================================
-        // BACKEND CONTROLLED FIELDS
-        // ======================================================
-
         source: "customer",
 
         featuredOnHomepage: false,
@@ -104,11 +81,6 @@ TestimonialRoute.post("/create",Image_upload.single("avatar"),
 
         rejectedAt: null,
       });
-
-      // ========================================================
-      // SUCCESS RESPONSE
-      // ========================================================
-
       return res.status(201).json({
         success: true,
 
@@ -165,11 +137,6 @@ TestimonialRoute.post("/admin/create",UserMiddleWare,Image_upload.single("avatar
         featuredOnHomepage,
         status,
       } = req.body;
-
-      // ========================================================
-      // VALIDATION
-      // ========================================================
-
       if (!name || !name.trim()) {
         return res.status(400).json({
           success: false,
@@ -190,11 +157,6 @@ TestimonialRoute.post("/admin/create",UserMiddleWare,Image_upload.single("avatar
           message: "Rating is required.",
         });
       }
-
-      // ========================================================
-      // RATING VALIDATION
-      // ========================================================
-
       const numericRating = Number(rating);
 
       if (
@@ -207,11 +169,6 @@ TestimonialRoute.post("/admin/create",UserMiddleWare,Image_upload.single("avatar
           message: "Rating must be an integer between 1 and 5.",
         });
       }
-
-      // ========================================================
-      // SOURCE VALIDATION
-      // ========================================================
-
       const testimonialSource = source || "customer";
 
       if (!["customer", "tripadvisor"].includes(testimonialSource)) {
@@ -221,10 +178,6 @@ TestimonialRoute.post("/admin/create",UserMiddleWare,Image_upload.single("avatar
         });
       }
 
-      // ========================================================
-      // STATUS VALIDATION
-      // ========================================================
-
       const testimonialStatus = status || "approved";
 
       if (!["pending", "approved", "rejected"].includes(testimonialStatus)) {
@@ -233,11 +186,6 @@ TestimonialRoute.post("/admin/create",UserMiddleWare,Image_upload.single("avatar
           message: 'Status must be "pending", "approved", or "rejected".',
         });
       }
-
-      // ========================================================
-      // ACCENT VALIDATION
-      // ========================================================
-
       const testimonialAccent = accent || "blue";
 
       if (!["blue", "orange"].includes(testimonialAccent)) {
@@ -247,18 +195,10 @@ TestimonialRoute.post("/admin/create",UserMiddleWare,Image_upload.single("avatar
         });
       }
 
-      // ========================================================
-      // BOOLEAN VALUES
-      // ========================================================
-
       const isVerified = verified === true || verified === "true";
 
       const wantsHomepageFeature =
         featuredOnHomepage === true || featuredOnHomepage === "true";
-
-      // ========================================================
-      // HOMEPAGE FEATURE VALIDATION
-      // ========================================================
 
       if (
         wantsHomepageFeature &&
@@ -272,17 +212,8 @@ TestimonialRoute.post("/admin/create",UserMiddleWare,Image_upload.single("avatar
         });
       }
 
-      // ========================================================
-      // AVATAR
-      // ========================================================
-
       let avatar = null;
       let avatarId=null;
-
-      // --------------------------------------------------------
-      // OPTION 1: IMAGE UPLOAD
-      // --------------------------------------------------------
-
       if (req.file) {
         const uploadedImage = await uploadToCloudinary(
           req.file.buffer,
@@ -292,18 +223,9 @@ TestimonialRoute.post("/admin/create",UserMiddleWare,Image_upload.single("avatar
         avatar = uploadedImage.secure_url;
         avatarId=uploadedImage.public_id;
       }
-
-      // --------------------------------------------------------
-      // OPTION 2: AVATAR URL
-      // --------------------------------------------------------
       else if (typeof avatarUrl === "string" && avatarUrl.trim()) {
         avatar = avatarUrl.trim();
       }
-
-      // ========================================================
-      // APPROVAL DATES
-      // ========================================================
-
       let approvedAt = null;
       let rejectedAt = null;
 
@@ -314,10 +236,6 @@ TestimonialRoute.post("/admin/create",UserMiddleWare,Image_upload.single("avatar
       if (testimonialStatus === "rejected") {
         rejectedAt = new Date();
       }
-
-      // ========================================================
-      // CREATE TESTIMONIAL
-      // ========================================================
 
       const testimonial = await Testimonial.create({
         name: name.trim(),
@@ -345,10 +263,6 @@ TestimonialRoute.post("/admin/create",UserMiddleWare,Image_upload.single("avatar
 
         rejectedAt,
       });
-
-      // ========================================================
-      // SUCCESS RESPONSE
-      // ========================================================
 
       return res.status(201).json({
         success: true,
@@ -399,19 +313,11 @@ TestimonialRoute.post("/admin/create",UserMiddleWare,Image_upload.single("avatar
 
 TestimonialRoute.get("/", async (req, res) => {
   try {
-    // ========================================================
-    // FIND APPROVED TESTIMONIALS
-    // ========================================================
-
     const testimonials = await Testimonial.find({
       status: "approved",
     })
       .sort({ createdAt: -1 })
       .lean();
-
-    // ========================================================
-    // SUCCESS RESPONSE
-    // ========================================================
 
     return res.status(200).json({
       success: true,
@@ -435,9 +341,6 @@ TestimonialRoute.get("/", async (req, res) => {
 
 TestimonialRoute.get("/homepage", async (req, res) => {
   try {
-    // ======================================================
-    // FIND HOMEPAGE TESTIMONIALS
-    // ======================================================
 
     const testimonials = await Testimonial.find({
       source: "tripadvisor",
@@ -447,11 +350,6 @@ TestimonialRoute.get("/homepage", async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(7)
       .lean();
-
-    // ======================================================
-    // SUCCESS RESPONSE
-    // ======================================================
-
     return res.status(200).json({
       success: true,
 
@@ -479,17 +377,11 @@ TestimonialRoute.get("/admin", UserMiddleWare, async (req, res) => {
         message: "Only admins can access this  Testimonials",
       });
     }
-    // ======================================================
-    // GET ALL TESTIMONIALS
-    // ======================================================
 
     const testimonials = await Testimonial.find({})
       .sort({ createdAt: -1 })
       .lean();
 
-    // ======================================================
-    // SUCCESS RESPONSE
-    // ======================================================
 
     return res.status(200).json({
       success: true,
@@ -610,20 +502,12 @@ TestimonialRoute.patch("/admin/:id/approve",UserMiddleWare,async (req, res) => {
 
       const { id } = req.params;
 
-      // ======================================================
-      // VALIDATE ID
-      // ======================================================
-
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
           success: false,
           message: "Invalid testimonial ID.",
         });
       }
-
-      // ======================================================
-      // FIND TESTIMONIAL
-      // ======================================================
 
       const testimonial = await Testimonial.findById(id);
 
@@ -634,10 +518,6 @@ TestimonialRoute.patch("/admin/:id/approve",UserMiddleWare,async (req, res) => {
         });
       }
 
-      // ======================================================
-      // ALREADY APPROVED
-      // ======================================================
-
       if (testimonial.status === "approved") {
         return res.status(200).json({
           success: true,
@@ -645,10 +525,6 @@ TestimonialRoute.patch("/admin/:id/approve",UserMiddleWare,async (req, res) => {
           data: testimonial,
         });
       }
-
-      // ======================================================
-      // APPROVE TESTIMONIAL
-      // ======================================================
 
       testimonial.status = "approved";
 
@@ -659,10 +535,6 @@ TestimonialRoute.patch("/admin/:id/approve",UserMiddleWare,async (req, res) => {
       testimonial.rejectedAt = null;
 
       await testimonial.save();
-
-      // ======================================================
-      // SUCCESS RESPONSE
-      // ======================================================
 
       return res.status(200).json({
         success: true,
@@ -694,20 +566,12 @@ TestimonialRoute.patch("/admin/:id/reject",UserMiddleWare,async (req, res) => {
       }
       const { id } = req.params;
 
-      // ======================================================
-      // VALIDATE ID
-      // ======================================================
-
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
           success: false,
           message: "Invalid testimonial ID.",
         });
       }
-
-      // ======================================================
-      // FIND TESTIMONIAL
-      // ======================================================
 
       const testimonial = await Testimonial.findById(id);
 
@@ -718,10 +582,6 @@ TestimonialRoute.patch("/admin/:id/reject",UserMiddleWare,async (req, res) => {
         });
       }
 
-      // ======================================================
-      // ALREADY REJECTED
-      // ======================================================
-
       if (testimonial.status === "rejected") {
         return res.status(200).json({
           success: true,
@@ -729,11 +589,6 @@ TestimonialRoute.patch("/admin/:id/reject",UserMiddleWare,async (req, res) => {
           data: testimonial,
         });
       }
-
-      // ======================================================
-      // REJECT TESTIMONIAL
-      // ======================================================
-
       testimonial.status = "rejected";
 
       testimonial.rejectedAt = new Date();
@@ -742,20 +597,9 @@ TestimonialRoute.patch("/admin/:id/reject",UserMiddleWare,async (req, res) => {
 
       testimonial.approvedAt = null;
 
-      // ======================================================
-      // IMPORTANT
-      // ======================================================
-      // A rejected testimonial should not appear on homepage.
-      // Therefore, remove homepage featuring as well.
-
       testimonial.featuredOnHomepage = false;
 
       await testimonial.save();
-
-      // ======================================================
-      // SUCCESS RESPONSE
-      // ======================================================
-
       return res.status(200).json({
         success: true,
 
@@ -787,10 +631,6 @@ TestimonialRoute.patch("/admin/:id/feature",UserMiddleWare,async (req, res) => {
       const { id } = req.params;
       const { featuredOnHomepage } = req.body;
 
-      // ======================================================
-      // VALIDATE ID
-      // ======================================================
-
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
           success: false,
@@ -798,20 +638,12 @@ TestimonialRoute.patch("/admin/:id/feature",UserMiddleWare,async (req, res) => {
         });
       }
 
-      // ======================================================
-      // VALIDATE FEATURE VALUE
-      // ======================================================
-
       if (typeof featuredOnHomepage !== "boolean") {
         return res.status(400).json({
           success: false,
           message: "featuredOnHomepage must be a boolean value.",
         });
       }
-
-      // ======================================================
-      // FIND TESTIMONIAL
-      // ======================================================
 
       const testimonial = await Testimonial.findById(id);
 
@@ -821,12 +653,7 @@ TestimonialRoute.patch("/admin/:id/feature",UserMiddleWare,async (req, res) => {
           message: "Testimonial not found.",
         });
       }
-
-      // ======================================================
-      // ONLY APPROVED TRIPADVISOR REVIEWS
-      // CAN BE FEATURED
-      // ======================================================
-
+      
       if (
         featuredOnHomepage === true &&
         (testimonial.source !== "tripadvisor" ||
@@ -839,17 +666,9 @@ TestimonialRoute.patch("/admin/:id/feature",UserMiddleWare,async (req, res) => {
         });
       }
 
-      // ======================================================
-      // FEATURE / UNFEATURE
-      // ======================================================
-
       testimonial.featuredOnHomepage = featuredOnHomepage;
 
       await testimonial.save();
-
-      // ======================================================
-      // SUCCESS RESPONSE
-      // ======================================================
 
       return res.status(200).json({
         success: true,
@@ -887,9 +706,6 @@ TestimonialRoute.patch("/admin/:id/feature",UserMiddleWare,async (req, res) => {
 
 TestimonialRoute.delete("/admin/:id", UserMiddleWare, async (req, res) => {
   try {
-    // ======================================================
-    // ADMIN CHECK
-    // ======================================================
 
     if (req.user.role !== "admin") {
       return res.status(403).json({
@@ -899,21 +715,12 @@ TestimonialRoute.delete("/admin/:id", UserMiddleWare, async (req, res) => {
     }
 
     const { id } = req.params;
-
-    // ======================================================
-    // VALIDATE ID
-    // ======================================================
-
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
         message: "Invalid testimonial ID.",
       });
     }
-
-    // ======================================================
-    // FIND TESTIMONIAL
-    // ======================================================
 
     const testimonial = await Testimonial.findById(id);
 
@@ -924,16 +731,8 @@ TestimonialRoute.delete("/admin/:id", UserMiddleWare, async (req, res) => {
       });
     }
 
-    // ======================================================
-    // DELETE TESTIMONIAL
-    // ======================================================
-
     await Testimonial.findByIdAndDelete(id);
     await cleanupDocumentImages(testimonial, ["avatarId"]);
-
-    // ======================================================
-    // SUCCESS RESPONSE
-    // ======================================================
 
     return res.status(200).json({
       success: true,

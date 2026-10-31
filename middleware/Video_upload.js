@@ -1,17 +1,6 @@
 const multer = require("multer");
 
-// ============================================================
-// STORE FILE IN MEMORY
-// ============================================================
-
 const storage = multer.memoryStorage();
-
-// ============================================================
-// VIDEO UPLOAD
-// Supports:
-// - Video files only
-// - Maximum 100 MB
-// ============================================================
 
 const Video_upload = multer({
   storage: storage,
@@ -21,17 +10,9 @@ const Video_upload = multer({
   },
 
   fileFilter: (req, file, cb) => {
-    // --------------------------------------------------------
-    // ALLOW VIDEOS ONLY
-    // --------------------------------------------------------
-
     if (file.mimetype.startsWith("video/")) {
       return cb(null, true);
     }
-
-    // --------------------------------------------------------
-    // REJECT EVERYTHING ELSE
-    // --------------------------------------------------------
 
     return cb(
       new Error("Only video files are allowed.")

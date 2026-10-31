@@ -41,10 +41,6 @@ ClientGalleryRoute.get("/", async (req, res) => {
 
 ClientGalleryRoute.get("/admin",UserMiddleWare,async (req, res) => {
     try {
-      // ======================================================
-      // ADMIN CHECK
-      // ======================================================
-
       if (req.user.role !== "admin") {
         return res.status(403).json({
           success: false,
@@ -52,20 +48,10 @@ ClientGalleryRoute.get("/admin",UserMiddleWare,async (req, res) => {
           message: "Admin access required.",
         });
       }
-
-      // ======================================================
-      // FIND ALL
-      // ======================================================
-
       const gallery =
         await ClientGallery.find({})
           .sort({ createdAt: -1 })
           .lean();
-
-      // ======================================================
-      // SUCCESS
-      // ======================================================
-
       return res.status(200).json({
         success: true,
 
@@ -92,10 +78,6 @@ ClientGalleryRoute.get("/admin",UserMiddleWare,async (req, res) => {
 
 ClientGalleryRoute.get("/:id", async (req, res) => {
   try {
-    // ======================================================
-    // VALIDATE ID
-    // ======================================================
-
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({
         success: false,

@@ -14,10 +14,6 @@ const sendAdminPayNowEmail = require("../utils/sendPayNowEmail");
 const PayNowEnquiryRouter = express.Router();
 
 
-// ============================================================
-// HELPERS
-// ============================================================
-
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -92,12 +88,6 @@ function withFullCountryNames(enquiry) {
   };
 }
 
-
-// ============================================================
-// PUBLIC
-// POST /pay-now/create
-// ============================================================
-
 PayNowEnquiryRouter.post("/create", async (req, res) => {
   try {
     const {
@@ -122,11 +112,6 @@ PayNowEnquiryRouter.post("/create", async (req, res) => {
       billingCountry,
       billingTelephone,
     } = req.body;
-
-
-    // --------------------------------------------------------
-    // Required fields
-    // --------------------------------------------------------
 
     const missingField = findMissingRequiredField([
       ["Amount", amount],
@@ -155,11 +140,6 @@ PayNowEnquiryRouter.post("/create", async (req, res) => {
       });
     }
 
-
-    // --------------------------------------------------------
-    // Amount validation
-    // --------------------------------------------------------
-
     const numericAmount = Number(amount);
 
     if (
@@ -171,11 +151,6 @@ PayNowEnquiryRouter.post("/create", async (req, res) => {
         message: "Amount must be a valid positive number",
       });
     }
-
-
-    // --------------------------------------------------------
-    // Email validation
-    // --------------------------------------------------------
 
     const EMAIL_REGEX =
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -216,11 +191,6 @@ PayNowEnquiryRouter.post("/create", async (req, res) => {
       });
     }
 
-
-    // --------------------------------------------------------
-    // Telephone validation
-    // --------------------------------------------------------
-
     const normalizedTelephone =
       String(telephone).trim();
 
@@ -251,21 +221,11 @@ PayNowEnquiryRouter.post("/create", async (req, res) => {
       });
     }
 
-
-    // --------------------------------------------------------
-    // Lead location
-    // --------------------------------------------------------
-
     const leadLocation =
       await getLeadLocation(
         req,
         normalizedTelephone
       );
-
-
-    // --------------------------------------------------------
-    // Risk detection
-    // --------------------------------------------------------
 
     const riskResult = detectRisk({
       nationality: country,
@@ -276,11 +236,6 @@ PayNowEnquiryRouter.post("/create", async (req, res) => {
       phoneCountryCode:
         leadLocation.phoneCountryCode,
     });
-
-
-    // --------------------------------------------------------
-    // Lead metadata
-    // --------------------------------------------------------
 
     const leadMetadata = {
       ipAddress:
@@ -312,11 +267,6 @@ PayNowEnquiryRouter.post("/create", async (req, res) => {
       riskReasons:
         riskResult.riskReasons,
     };
-
-
-    // --------------------------------------------------------
-    // Create enquiry
-    // --------------------------------------------------------
 
     const newEnquiry =
       await PayNowEnquiry.create({
@@ -379,11 +329,6 @@ PayNowEnquiryRouter.post("/create", async (req, res) => {
         leadMetadata,
       });
 
-
-    // --------------------------------------------------------
-    // Send response
-    // --------------------------------------------------------
-
     res.status(201).json({
       success: true,
 
@@ -415,11 +360,6 @@ PayNowEnquiryRouter.post("/create", async (req, res) => {
       },
     });
 
-
-    // --------------------------------------------------------
-    // Admin email
-    // --------------------------------------------------------
-
     try {
       await sendAdminPayNowEmail(
         newEnquiry
@@ -448,13 +388,6 @@ PayNowEnquiryRouter.post("/create", async (req, res) => {
     );
   }
 });
-
-
-// ============================================================
-// ADMIN
-// GET /pay-now/admin
-// ============================================================
-
 PayNowEnquiryRouter.get(
   "/admin",
   UserMiddleWare,
@@ -499,11 +432,6 @@ PayNowEnquiryRouter.get(
       const skip =
         (currentPage - 1) *
         perPage;
-
-
-      // ------------------------------------------------------
-      // Filters
-      // ------------------------------------------------------
 
       const filter = {};
 
@@ -561,11 +489,6 @@ PayNowEnquiryRouter.get(
           },
         ];
       }
-
-
-      // ------------------------------------------------------
-      // Fetch
-      // ------------------------------------------------------
 
       const totalEnquiries =
         await PayNowEnquiry.countDocuments(
@@ -630,12 +553,6 @@ PayNowEnquiryRouter.get(
     }
   }
 );
-
-
-// ============================================================
-// ADMIN
-// GET /pay-now/admin/dashboard/stats
-// ============================================================
 
 PayNowEnquiryRouter.get(
   "/admin/dashboard/stats",
@@ -712,18 +629,9 @@ PayNowEnquiryRouter.get(
         paidAmountStats,
       ] =
         await Promise.all([
-
-          // -----------------------------------------------
-          // Total
-          // -----------------------------------------------
-
+          
           PayNowEnquiry.countDocuments(),
-
-
-          // -----------------------------------------------
-          // Status
-          // -----------------------------------------------
-
+          
           PayNowEnquiry.aggregate([
             {
               $group: {
@@ -737,11 +645,6 @@ PayNowEnquiryRouter.get(
             },
           ]),
 
-
-          // -----------------------------------------------
-          // Risk
-          // -----------------------------------------------
-
           PayNowEnquiry.aggregate([
             {
               $group: {
@@ -754,47 +657,24 @@ PayNowEnquiryRouter.get(
               },
             },
           ]),
-
-
-          // -----------------------------------------------
-          // Today
-          // -----------------------------------------------
-
           PayNowEnquiry.countDocuments({
             createdAt: {
               $gte:
                 startOfToday,
             },
           }),
-
-
-          // -----------------------------------------------
-          // Week
-          // -----------------------------------------------
-
           PayNowEnquiry.countDocuments({
             createdAt: {
               $gte:
                 startOfWeek,
             },
           }),
-
-
-          // -----------------------------------------------
-          // Month
-          // -----------------------------------------------
-
           PayNowEnquiry.countDocuments({
             createdAt: {
               $gte:
                 startOfMonth,
             },
           }),
-
-
-          // -----------------------------------------------
-          // Total amount requested
-          // -----------------------------------------------
 
           PayNowEnquiry.aggregate([
             {
@@ -808,12 +688,6 @@ PayNowEnquiryRouter.get(
               },
             },
           ]),
-
-
-          // -----------------------------------------------
-          // Total paid amount
-          // -----------------------------------------------
-
           PayNowEnquiry.aggregate([
             {
               $match: {
@@ -833,11 +707,6 @@ PayNowEnquiryRouter.get(
             },
           ]),
         ]);
-
-
-      // ----------------------------------------------------
-      // Status counts
-      // ----------------------------------------------------
 
       const statusCounts = {
         new: 0,
@@ -889,11 +758,6 @@ PayNowEnquiryRouter.get(
         }
       );
 
-
-      // ----------------------------------------------------
-      // Risk counts
-      // ----------------------------------------------------
-
       const riskCounts = {
         normal: 0,
         suspicious: 0,
@@ -928,11 +792,6 @@ PayNowEnquiryRouter.get(
         }
       );
 
-
-      // ----------------------------------------------------
-      // Amounts
-      // ----------------------------------------------------
-
       const totalAmountRequested =
         amountStats[0]?.total ||
         0;
@@ -941,11 +800,6 @@ PayNowEnquiryRouter.get(
       const totalAmountPaid =
         paidAmountStats[0]?.total ||
         0;
-
-
-      // ----------------------------------------------------
-      // Response
-      // ----------------------------------------------------
 
       return res.status(200).json({
         success: true,
@@ -997,11 +851,6 @@ PayNowEnquiryRouter.get(
   }
 );
 
-
-// ============================================================
-// ADMIN
-// GET /pay-now/admin/:id
-// ============================================================
 
 PayNowEnquiryRouter.get(
   "/admin/:id",
@@ -1070,12 +919,6 @@ PayNowEnquiryRouter.get(
   }
 );
 
-
-// ============================================================
-// ADMIN
-// PATCH /pay-now/admin/:id
-// ============================================================
-
 PayNowEnquiryRouter.patch(
   "/admin/:id",
   UserMiddleWare,
@@ -1120,11 +963,6 @@ PayNowEnquiryRouter.patch(
         });
       }
 
-
-      // ------------------------------------------------------
-      // Allowed fields
-      // ------------------------------------------------------
-
       const allowedFields = [
         "amount",
         "description",
@@ -1162,11 +1000,6 @@ PayNowEnquiryRouter.patch(
         });
       }
 
-
-      // ------------------------------------------------------
-      // Amount
-      // ------------------------------------------------------
-
       if (
         updateData.amount !== undefined
       ) {
@@ -1195,11 +1028,6 @@ PayNowEnquiryRouter.patch(
           numericAmount;
       }
 
-
-      // ------------------------------------------------------
-      // Description
-      // ------------------------------------------------------
-
       if (
         updateData.description !==
         undefined
@@ -1221,11 +1049,6 @@ PayNowEnquiryRouter.patch(
         updateData.description =
           updateData.description.trim();
       }
-
-
-      // ------------------------------------------------------
-      // Customer
-      // ------------------------------------------------------
 
       if (
         updateData.customer !==
@@ -1349,11 +1172,6 @@ PayNowEnquiryRouter.patch(
         };
       }
 
-
-      // ------------------------------------------------------
-      // Billing
-      // ------------------------------------------------------
-
       if (
         updateData.billing !==
         undefined
@@ -1460,20 +1278,10 @@ PayNowEnquiryRouter.patch(
         };
       }
 
-
-      // ------------------------------------------------------
-      // Apply update
-      // ------------------------------------------------------
-
       Object.assign(
         enquiry,
         updateData
       );
-
-
-      // ------------------------------------------------------
-      // Recalculate risk if customer country changed
-      // ------------------------------------------------------
 
       if (
         updateData.customer
@@ -1541,12 +1349,6 @@ PayNowEnquiryRouter.patch(
     }
   }
 );
-
-
-// ============================================================
-// ADMIN
-// PATCH /pay-now/admin/:id/status
-// ============================================================
 
 PayNowEnquiryRouter.patch(
   "/admin/:id/status",
@@ -1668,11 +1470,6 @@ PayNowEnquiryRouter.patch(
   }
 );
 
-
-// ============================================================
-// ADMIN
-// PATCH /pay-now/admin/:id/risk
-// ============================================================
 
 PayNowEnquiryRouter.patch(
   "/admin/:id/risk",
@@ -1833,12 +1630,6 @@ PayNowEnquiryRouter.patch(
   }
 );
 
-
-// ============================================================
-// ADMIN
-// PATCH /pay-now/admin/:id/notes
-// ============================================================
-
 PayNowEnquiryRouter.patch(
   "/admin/:id/notes",
   UserMiddleWare,
@@ -1941,12 +1732,6 @@ PayNowEnquiryRouter.patch(
     }
   }
 );
-
-
-// ============================================================
-// ADMIN
-// DELETE /pay-now/admin/:id
-// ============================================================
 
 PayNowEnquiryRouter.delete(
   "/admin/:id",
